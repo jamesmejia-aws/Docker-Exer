@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  # 1. PostgreSQL Service
+  postgres_db:
+    image: postgres:15
+    container_name: postgres_container
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=Avocado*2002
+      - POSTGRES_DB=student_directory
+    ports:
+      - "5432:5432"  # Allows you to connect from PgAdmin/DBeaver on your desktop
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  # 2. Spring Boot Service
+  backend_app:
+    build: ./spring-rest  # Points to the folder containing your backend Dockerfile
+    container_name: spring_backend
+    ports:
+      - "8080:8080"   # Exposes your REST APIs to your desktop browser/Postman
+    environment:
+      - DB_HOST=postgres_container  # Uses the database service name as the hostname
+      - DB_SCHEMA=student_directory
+      - DB_USER=postgres
+      - DB_PASS=Avocado*2002
+    depends_on:
+      - postgres_db  # Waits for the DB container to start before running Spring Boot
+
+  # 3. JavaScript Frontend Service
+  frontend_app:
+    build: ./integrated_student_management_system  # Points to the folder containing your frontend Dockerfile
+    container_name: web_frontend
+    ports:
+      - "80:80"  # Exposes your frontend on localhost:3000
+    depends_on:
+      - backend_app  # Waits for the backend container to start before running the frontend
+
+volumes:
+  pgdata:  # Ensures your data isn't deleted when the container stops
